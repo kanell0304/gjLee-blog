@@ -7,6 +7,11 @@ theme = "PaperMod"
   defaultTheme = "auto"
   ShowReadingTime = true
   ShowPostNavLinks = true
+  homeInfoParams = {Title = "이경준의 기술 블로그", Content = "CS 공부 기록과 개발 경험을 정리합니다."}
+
+[[params.socialIcons]]
+  name = "github"
+  url = "https://github.com/kanell0304"
 
 [taxonomies]
   category = "categories"
