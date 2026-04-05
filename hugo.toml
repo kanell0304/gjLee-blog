@@ -1,3 +1,13 @@
-baseURL = 'https://example.org/'
-locale = 'en-us'
-title = 'My New Hugo Project'
+baseURL = "https://kanell0304.github.io/gjLee-blog/"
+languageCode = "ko"
+title = "이경준의 기술 블로그"
+theme = "PaperMod"
+
+[params]
+  defaultTheme = "auto"
+  ShowReadingTime = true
+  ShowPostNavLinks = true
+
+[taxonomies]
+  category = "categories"
+  tag = "tags"
