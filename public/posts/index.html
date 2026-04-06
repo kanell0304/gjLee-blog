@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Posts | 이경준의 기술 블로그</title>
 <meta name="keywords" content="">
-<meta name="description" content="Posts - 이경준의 기술 블로그">
+<meta name="description" content="이슈, 생각, 공부 기록 등을 작성하는 파트입니다.">
 <meta name="author" content="">
 <link rel="canonical" href="http://localhost:1313/gjLee-blog/posts/">
 <link crossorigin="anonymous" href="/gjLee-blog/assets/css/stylesheet.4ef2299ae814559c4055cd3d15919aff78737e44fa7af337c506246832ba458a.css" integrity="sha256-TvIpmugUVZxAVc09FZGa/3hzfkT6evM3xQYkaDK6RYo=" rel="preload stylesheet" as="style">
@@ -103,12 +103,17 @@
         </div>
         <ul id="menu">
             <li>
-                <a href="http://localhost:1313/gjLee-blog/gjlee-blog/posts/" title="Posts">
-                    <span>Posts</span>
+                <a href="http://localhost:1313/gjLee-blog/posts/" title="Posts">
+                    <span class="active">Posts</span>
                 </a>
             </li>
             <li>
-                <a href="http://localhost:1313/gjLee-blog/gjlee-blog/tags/" title="Tags">
+                <a href="http://localhost:1313/gjLee-blog/projects/" title="Projects">
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/gjLee-blog/tags/" title="Tags">
                     <span>Tags</span>
                 </a>
             </li>
@@ -120,22 +125,24 @@
   <h1>
     Posts
   </h1>
+  <div class="post-description">
+    이슈, 생각, 공부 기록 등을 작성하는 파트입니다.
+  </div>
 </header>
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2 class="entry-hint-parent">JSON이란? 직렬화와 역직렬화 개념 정리
+    <h2 class="entry-hint-parent">[CS 공부]JSON이란? 직렬화와 역직렬화 개념 정리
     </h2>
   </header>
   <div class="entry-content">
     <p>JSON이란? JSON(JavaScript Object Notation)은 데이터를 표현하기 위한 텍스트 기반의 경량 데이터 형식이다. 이름에 JavaScript가 들어가지만 특정 언어에 종속되지 않으며, 대부분의 프로그래밍 언어에서 지원한다.
-{ &#34;name&#34;: &#34;이경준&#34;, &#34;age&#34;: 25, &#34;skills&#34;: [&#34;Python&#34;, &#34;Java&#34;, &#34;React&#34;] } 직렬화(Serialization)란? 프로그램 내부에서 사용하는 객체(Object) 를 외부로 전송하거나 저장할 수 있도록 문자열(String) 형태로 변환하는 과정이다.
-JavaScript에서 객체를 JSON 문자열로 직렬화하는 예시:
-const user = { name: &#34;이경준&#34;, age: 25 }; const jsonString = JSON.stringify(user); console.log(jsonString); // 출력: {&#34;name&#34;:&#34;이경준&#34;,&#34;age&#34;:25} console.log(typeof jsonString); // 출력: string JSON.stringify()를 통해 JavaScript 객체가 문자열로 변환되었다. 이 문자열은 네트워크를 통해 전송하거나 파일에 저장할 수 있다.
+{ &#34;name&#34;: &#34;이경준&#34;, &#34;age&#34;: 27, &#34;skills&#34;: [&#34;Python&#34;, &#34;Java&#34;, &#34;React&#34;] } JSON의 중첩 구조 JSON은 값으로 또 다른 객체나 배열을 가질 수 있어 계층적으로 데이터를 표현할 수 있다. 즉, 객체 안에 객체, 배열 안에 객체처럼 단계별로 중첩하여 복잡한 데이터를 구조화할 수 있다.
+{ &#34;name&#34;: &#34;이경준&#34;, &#34;age&#34;: 27, &#34;skills&#34;: { &#34;frontend&#34;: [&#34;React&#34;, &#34;Javascript&#34;], &#34;backend&#34;: [&#34;Python&#34;, &#34;Java&#34;] } } 위 예시에서 skills는 단순한 값이 아니라 frontend와 backend라는 키를 가진 또 다른 객체다. 이처럼 JSON은 재귀적으로 중첩이 가능하여 현실의 복잡한 데이터 구조를 표현하는 데 적합하다.
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2026-04-06 00:00:00 +0000 UTC'>April 6, 2026</span>&nbsp;·&nbsp;<span>1 분</span></footer>
-  <a class="entry-link" aria-label="post link to JSON이란? 직렬화와 역직렬화 개념 정리" href="http://localhost:1313/gjLee-blog/posts/json-serialization/"></a>
+  <footer class="entry-footer"><span title='2026-04-06 00:00:00 +0000 UTC'>April 6, 2026</span>&nbsp;·&nbsp;<span>2 분</span></footer>
+  <a class="entry-link" aria-label="post link to [CS 공부]JSON이란? 직렬화와 역직렬화 개념 정리" href="http://localhost:1313/gjLee-blog/posts/json-serialization/"></a>
 </article>
     </main>
     

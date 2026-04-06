@@ -1,16 +1,15 @@
 <!DOCTYPE html>
 <html lang="en" dir="auto" data-theme="auto">
 
-<head>
-	<meta name="generator" content="Hugo 0.160.0"><script src="/gjLee-blog/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=gjLee-blog/livereload" data-no-instant defer></script><meta charset="utf-8">
+<head><script src="/gjLee-blog/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=gjLee-blog/livereload" data-no-instant defer></script><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="robots" content="noindex, nofollow">
-<title>이경준의 기술 블로그</title>
-
-<meta name="description" content="">
+<title>Projects | 이경준의 기술 블로그</title>
+<meta name="keywords" content="">
+<meta name="description" content="프로젝트를 진행 기록, 회고록 파트입니다.">
 <meta name="author" content="">
-<link rel="canonical" href="http://localhost:1313/gjLee-blog/">
+<link rel="canonical" href="http://localhost:1313/gjLee-blog/projects/">
 <link crossorigin="anonymous" href="/gjLee-blog/assets/css/stylesheet.4ef2299ae814559c4055cd3d15919aff78737e44fa7af337c506246832ba458a.css" integrity="sha256-TvIpmugUVZxAVc09FZGa/3hzfkT6evM3xQYkaDK6RYo=" rel="preload stylesheet" as="style">
 <link rel="icon" href="http://localhost:1313/gjLee-blog/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/gjLee-blog/favicon-16x16.png">
@@ -19,8 +18,8 @@
 <link rel="mask-icon" href="http://localhost:1313/gjLee-blog/safari-pinned-tab.svg">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/gjLee-blog/index.xml" title="rss">
-<link rel="alternate" hreflang="en" href="http://localhost:1313/gjLee-blog/">
+<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/gjLee-blog/projects/index.xml" title="rss">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/gjLee-blog/projects/">
 <noscript>
     <style>
         #theme-toggle,
@@ -110,7 +109,7 @@
             </li>
             <li>
                 <a href="http://localhost:1313/gjLee-blog/projects/" title="Projects">
-                    <span>Projects</span>
+                    <span class="active">Projects</span>
                 </a>
             </li>
             <li>
@@ -122,43 +121,14 @@
     </nav>
 </header>
 <main class="main"> 
-<article class="first-entry home-info">
-    <header class="entry-header">
-        <h1>이경준의 기술 블로그</h1>
-    </header>
-    <div class="entry-content">
-        나만의 공부 기록과 개발 경험을 정리하는 공간입니다.
-    </div>
-    <footer class="entry-footer">
-        <div class="social-icons" >
-    <a href="https://github.com/kanell0304" target="_blank" rel="noopener noreferrer me"
-        title="Github">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-    stroke-linecap="round" stroke-linejoin="round">
-    <path
-        d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
-    </path>
-</svg>
-    </a>
-</div>
-
-    </footer>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">[CS 공부]JSON이란? 직렬화와 역직렬화 개념 정리
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>JSON이란? JSON(JavaScript Object Notation)은 데이터를 표현하기 위한 텍스트 기반의 경량 데이터 형식이다. 이름에 JavaScript가 들어가지만 특정 언어에 종속되지 않으며, 대부분의 프로그래밍 언어에서 지원한다.
-{ &#34;name&#34;: &#34;이경준&#34;, &#34;age&#34;: 27, &#34;skills&#34;: [&#34;Python&#34;, &#34;Java&#34;, &#34;React&#34;] } JSON의 중첩 구조 JSON은 값으로 또 다른 객체나 배열을 가질 수 있어 계층적으로 데이터를 표현할 수 있다. 즉, 객체 안에 객체, 배열 안에 객체처럼 단계별로 중첩하여 복잡한 데이터를 구조화할 수 있다.
-{ &#34;name&#34;: &#34;이경준&#34;, &#34;age&#34;: 27, &#34;skills&#34;: { &#34;frontend&#34;: [&#34;React&#34;, &#34;Javascript&#34;], &#34;backend&#34;: [&#34;Python&#34;, &#34;Java&#34;] } } 위 예시에서 skills는 단순한 값이 아니라 frontend와 backend라는 키를 가진 또 다른 객체다. 이처럼 JSON은 재귀적으로 중첩이 가능하여 현실의 복잡한 데이터 구조를 표현하는 데 적합하다.
-...</p>
+<header class="page-header">
+  <h1>
+    Projects
+  </h1>
+  <div class="post-description">
+    프로젝트를 진행 기록, 회고록 파트입니다.
   </div>
-  <footer class="entry-footer"><span title='2026-04-06 00:00:00 +0000 UTC'>April 6, 2026</span>&nbsp;·&nbsp;<span>2 분</span></footer>
-  <a class="entry-link" aria-label="post link to [CS 공부]JSON이란? 직렬화와 역직렬화 개념 정리" href="http://localhost:1313/gjLee-blog/posts/json-serialization/"></a>
-</article>
+</header>
     </main>
     
 <footer class="footer">

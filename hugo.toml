@@ -7,7 +7,7 @@ theme = "PaperMod"
   defaultTheme = "auto"
   ShowReadingTime = true
   ShowPostNavLinks = true
-  homeInfoParams = {Title = "이경준의 기술 블로그", Content = "CS 공부 기록과 개발 경험을 정리합니다."}
+  homeInfoParams = {Title = "이경준의 기술 블로그", Content = "나만의 공부 기록과 개발 경험을 정리하는 공간입니다."}
 
 [[params.socialIcons]]
   name = "github"
@@ -19,9 +19,14 @@ theme = "PaperMod"
   weight = 1
 
 [[menus.main]]
+  name = "Projects"
+  url = "projects/"
+  weight = 2
+
+[[menus.main]]
   name = "Tags"
   url = "tags/"
-  weight = 2
+  weight = 3
 
 [taxonomies]
   category = "categories"
