@@ -1,5 +1,5 @@
 ---
-title: "JSON이란? 직렬화와 역직렬화 개념 정리"
+title: "[CS 공부]JSON이란? 직렬화와 역직렬화 개념 정리"
 date: 2026-04-06
 tags: ["CS", "JSON"]
 categories: ["CS"]

@@ -15,12 +15,12 @@ theme = "PaperMod"
 
 [[menus.main]]
   name = "Posts"
-  url = "/gjLee-blog/posts/"
+  url = "posts/"
   weight = 1
 
 [[menus.main]]
   name = "Tags"
-  url = "/gjLee-blog/tags/"
+  url = "tags/"
   weight = 2
 
 [taxonomies]
