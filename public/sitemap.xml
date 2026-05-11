@@ -2,10 +2,43 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/gjLee-blog/posts/json-serialization/</loc>
-    <lastmod>2026-04-06T00:00:00+00:00</lastmod>
+    <loc>http://localhost:1313/gjLee-blog/posts/spring-boot-refactoring-db-optimization/</loc>
+    <lastmod>2026-04-12T00:00:00+00:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/gjLee-blog/categories/</loc>
+    <lastmod>2026-04-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/gjLee-blog/tags/java/</loc>
+    <lastmod>2026-04-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/gjLee-blog/tags/jpa/</loc>
+    <lastmod>2026-04-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/gjLee-blog/tags/n&#43;1/</loc>
+    <lastmod>2026-04-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/gjLee-blog/posts/</loc>
+    <lastmod>2026-04-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/gjLee-blog/tags/spring-boot/</loc>
+    <lastmod>2026-04-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/gjLee-blog/tags/</loc>
+    <lastmod>2026-04-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/gjLee-blog/categories/%EB%A6%AC%ED%8C%A9%ED%86%A0%EB%A7%81/</loc>
+    <lastmod>2026-04-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/gjLee-blog/tags/%EB%A6%AC%ED%8C%A9%ED%86%A0%EB%A7%81/</loc>
+    <lastmod>2026-04-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/gjLee-blog/tags/%EC%84%B1%EB%8A%A5%EC%B5%9C%EC%A0%81%ED%99%94/</loc>
+    <lastmod>2026-04-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/gjLee-blog/</loc>
+    <lastmod>2026-04-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/gjLee-blog/posts/json-serialization/</loc>
     <lastmod>2026-04-06T00:00:00+00:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/gjLee-blog/categories/cs/</loc>
@@ -15,15 +48,6 @@
     <lastmod>2026-04-06T00:00:00+00:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/gjLee-blog/tags/json/</loc>
-    <lastmod>2026-04-06T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/gjLee-blog/posts/</loc>
-    <lastmod>2026-04-06T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/gjLee-blog/tags/</loc>
-    <lastmod>2026-04-06T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/gjLee-blog/</loc>
     <lastmod>2026-04-06T00:00:00+00:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/gjLee-blog/projects/</loc>

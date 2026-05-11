@@ -6,8 +6,50 @@
     <description>Recent content in Tags on 이경준의 기술 블로그</description>
     <generator>Hugo</generator>
     <language>ko</language>
-    <lastBuildDate>Mon, 06 Apr 2026 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 12 Apr 2026 00:00:00 +0000</lastBuildDate>
     <atom:link href="http://localhost:1313/gjLee-blog/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Java</title>
+      <link>http://localhost:1313/gjLee-blog/tags/java/</link>
+      <pubDate>Sun, 12 Apr 2026 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/gjLee-blog/tags/java/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>JPA</title>
+      <link>http://localhost:1313/gjLee-blog/tags/jpa/</link>
+      <pubDate>Sun, 12 Apr 2026 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/gjLee-blog/tags/jpa/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>N&#43;1</title>
+      <link>http://localhost:1313/gjLee-blog/tags/n&#43;1/</link>
+      <pubDate>Sun, 12 Apr 2026 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/gjLee-blog/tags/n&#43;1/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Spring Boot</title>
+      <link>http://localhost:1313/gjLee-blog/tags/spring-boot/</link>
+      <pubDate>Sun, 12 Apr 2026 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/gjLee-blog/tags/spring-boot/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>리팩토링</title>
+      <link>http://localhost:1313/gjLee-blog/tags/%EB%A6%AC%ED%8C%A9%ED%86%A0%EB%A7%81/</link>
+      <pubDate>Sun, 12 Apr 2026 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/gjLee-blog/tags/%EB%A6%AC%ED%8C%A9%ED%86%A0%EB%A7%81/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>성능최적화</title>
+      <link>http://localhost:1313/gjLee-blog/tags/%EC%84%B1%EB%8A%A5%EC%B5%9C%EC%A0%81%ED%99%94/</link>
+      <pubDate>Sun, 12 Apr 2026 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/gjLee-blog/tags/%EC%84%B1%EB%8A%A5%EC%B5%9C%EC%A0%81%ED%99%94/</guid>
+      <description></description>
+    </item>
     <item>
       <title>CS</title>
       <link>http://localhost:1313/gjLee-blog/tags/cs/</link>

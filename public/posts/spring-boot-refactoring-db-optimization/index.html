@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><script src="/gjLee-blog/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=gjLee-blog/livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>[리팩토링] Spring Boot 쇼핑몰 서비스 레이어 DB 접근 최적화 | 이경준의 기술 블로그</title>
+<meta name="keywords" content="Java, Spring Boot, JPA, 리팩토링, N&#43;1, 성능최적화">
+<meta name="description" content="개요
+팀 프로젝트로 개발한 Spring Boot 기반 남성 의류 쇼핑몰의 백엔드를 리팩토링하면서
+서비스 레이어에서 발견한 DB 접근 비효율 패턴 5가지와 개선 방법을 정리했다.
+프로젝트를 처음 개발할 당시 기능 구현에 집중하다 보니, 서비스 메서드 곳곳에서
+불필요한 DB 쿼리가 반복 실행되는 패턴이 여러 곳에 남아 있었다.
+이번 리팩토링에서는 코드를 다시 읽으면서 비효율적인 부분을 유형별로 분류하고 개선했다.
+
+문제 유형 분류
+발견된 문제를 크게 5가지 유형으로 분류했다.
+
+  
+      
+          유형
+          설명
+          해당 서비스
+      
+  
+  
+      
+          유형 1
+          N&#43;1 쿼리
+          Order, ReviewList, Cart
+      
+      
+          유형 2
+          이미 있는 데이터를 또 조회
+          Order, Member
+      
+      
+          유형 3
+          필요 없는 엔티티 선조회
+          Mileage
+      
+      
+          유형 4
+          전체 조회 후 루프 탐색 (&#43; 버그)
+          ReviewList, QnAList
+      
+      
+          유형 5
+          연관 데이터 분리 조회
+          Item
+      
+  
+
+
+유형 1. N&#43;1 쿼리 문제
+N&#43;1 문제는 JPA를 사용할 때 가장 흔하게 발생하는 성능 안티패턴이다.
+이름의 의미는 다음과 같다.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/gjLee-blog/posts/spring-boot-refactoring-db-optimization/">
+<link crossorigin="anonymous" href="/gjLee-blog/assets/css/stylesheet.4ef2299ae814559c4055cd3d15919aff78737e44fa7af337c506246832ba458a.css" integrity="sha256-TvIpmugUVZxAVc09FZGa/3hzfkT6evM3xQYkaDK6RYo=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/gjLee-blog/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/gjLee-blog/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/gjLee-blog/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/gjLee-blog/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/gjLee-blog/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/gjLee-blog/posts/spring-boot-refactoring-db-optimization/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/gjLee-blog/" accesskey="h" title="이경준의 기술 블로그 (Alt + H)">이경준의 기술 블로그</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/gjLee-blog/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/gjLee-blog/projects/" title="Projects">
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/gjLee-blog/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      [리팩토링] Spring Boot 쇼핑몰 서비스 레이어 DB 접근 최적화
+    </h1>
+    <div class="post-meta"><span title='2026-04-12 00:00:00 +0000 UTC'>2026년 4월 12일</span>&nbsp;·&nbsp;<span>7 분</span>
+
+</div>
+  </header> 
+  <div class="post-content"><h2 id="개요">개요<a hidden class="anchor" aria-hidden="true" href="#개요">#</a></h2>
+<p>팀 프로젝트로 개발한 Spring Boot 기반 남성 의류 쇼핑몰의 백엔드를 리팩토링하면서
+서비스 레이어에서 발견한 <strong>DB 접근 비효율 패턴 5가지</strong>와 개선 방법을 정리했다.</p>
+<p>프로젝트를 처음 개발할 당시 기능 구현에 집중하다 보니, 서비스 메서드 곳곳에서
+<strong>불필요한 DB 쿼리가 반복 실행되는 패턴</strong>이 여러 곳에 남아 있었다.
+이번 리팩토링에서는 코드를 다시 읽으면서 비효율적인 부분을 유형별로 분류하고 개선했다.</p>
+<hr>
+<h2 id="문제-유형-분류">문제 유형 분류<a hidden class="anchor" aria-hidden="true" href="#문제-유형-분류">#</a></h2>
+<p>발견된 문제를 크게 5가지 유형으로 분류했다.</p>
+<table>
+  <thead>
+      <tr>
+          <th>유형</th>
+          <th>설명</th>
+          <th>해당 서비스</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>유형 1</td>
+          <td>N+1 쿼리</td>
+          <td>Order, ReviewList, Cart</td>
+      </tr>
+      <tr>
+          <td>유형 2</td>
+          <td>이미 있는 데이터를 또 조회</td>
+          <td>Order, Member</td>
+      </tr>
+      <tr>
+          <td>유형 3</td>
+          <td>필요 없는 엔티티 선조회</td>
+          <td>Mileage</td>
+      </tr>
+      <tr>
+          <td>유형 4</td>
+          <td>전체 조회 후 루프 탐색 (+ 버그)</td>
+          <td>ReviewList, QnAList</td>
+      </tr>
+      <tr>
+          <td>유형 5</td>
+          <td>연관 데이터 분리 조회</td>
+          <td>Item</td>
+      </tr>
+  </tbody>
+</table>
+<hr>
+<h2 id="유형-1-n1-쿼리-문제">유형 1. N+1 쿼리 문제<a hidden class="anchor" aria-hidden="true" href="#유형-1-n1-쿼리-문제">#</a></h2>
+<p>N+1 문제는 JPA를 사용할 때 가장 흔하게 발생하는 성능 안티패턴이다.
+이름의 의미는 다음과 같다.</p>
+<ul>
+<li><strong>1</strong>: 목록을 가져오는 쿼리 1번</li>
+<li><strong>N</strong>: 그 결과의 각 항목마다 연관 데이터를 조회하는 쿼리 N번</li>
+</ul>
+<h3 id="1-1-orderserviceimpl--주문-목록-조회">1-1. OrderServiceImpl — 주문 목록 조회<a hidden class="anchor" aria-hidden="true" href="#1-1-orderserviceimpl--주문-목록-조회">#</a></h3>
+<p>주문 목록을 조회하는 메서드 7개에서 동일한 패턴이 발견됐다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 개선 전 — 페이지 20건이면 DB 21번 조회</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> orderPage.<span style="color:#a6e22e">map</span>(order <span style="color:#f92672">-&gt;</span> {
+</span></span><span style="display:flex;"><span>    List<span style="color:#f92672">&lt;</span>OrderItem<span style="color:#f92672">&gt;</span> items <span style="color:#f92672">=</span> orderItemRepository.<span style="color:#a6e22e">findByOrderId</span>(order.<span style="color:#a6e22e">getId</span>()); <span style="color:#75715e">// 루프마다 실행</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> OrderDTO(order, items);
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p><code>OrderRepository</code>에 <code>@EntityGraph</code> 주석이 달려 있었지만, <code>Order</code> 엔티티에
+<code>orderItems</code> 컬렉션 필드 자체가 없어서 동작하지 않는 상태로 방치되어 있었다.
+그래서 서비스에서 직접 루프를 돌며 하나씩 조회하는 방식이 남은 것이었다.</p>
+<p><strong>해결 방법: 배치 조회(Batch Fetch) 패턴</strong></p>
+<p><code>IN</code> 절로 한 번에 조회한 뒤 Java 메모리에서 <code>Map</code>으로 그룹핑하는 방식을 적용했다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// OrderItemRepository에 추가</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@Query</span>(<span style="color:#e6db74">&#34;SELECT oi FROM OrderItem oi WHERE oi.order.id IN :orderIds ORDER BY oi.id DESC&#34;</span>)
+</span></span><span style="display:flex;"><span>List<span style="color:#f92672">&lt;</span>OrderItem<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">findByOrderIds</span>(<span style="color:#a6e22e">@Param</span>(<span style="color:#e6db74">&#34;orderIds&#34;</span>) List<span style="color:#f92672">&lt;</span>Long<span style="color:#f92672">&gt;</span> orderIds);
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 개선 후 — 항상 DB 2번으로 고정</span>
+</span></span><span style="display:flex;"><span>List<span style="color:#f92672">&lt;</span>Long<span style="color:#f92672">&gt;</span> orderIds <span style="color:#f92672">=</span> orderPage.<span style="color:#a6e22e">getContent</span>().<span style="color:#a6e22e">stream</span>()
+</span></span><span style="display:flex;"><span>        .<span style="color:#a6e22e">map</span>(Order::getId).<span style="color:#a6e22e">collect</span>(Collectors.<span style="color:#a6e22e">toList</span>());
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Map<span style="color:#f92672">&lt;</span>Long, List<span style="color:#f92672">&lt;</span>OrderItem<span style="color:#f92672">&gt;&gt;</span> itemsByOrderId <span style="color:#f92672">=</span> orderItemRepository.<span style="color:#a6e22e">findByOrderIds</span>(orderIds)
+</span></span><span style="display:flex;"><span>        .<span style="color:#a6e22e">stream</span>().<span style="color:#a6e22e">collect</span>(Collectors.<span style="color:#a6e22e">groupingBy</span>(oi <span style="color:#f92672">-&gt;</span> oi.<span style="color:#a6e22e">getOrder</span>().<span style="color:#a6e22e">getId</span>()));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> orderPage.<span style="color:#a6e22e">map</span>(order <span style="color:#f92672">-&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">new</span> OrderDTO(order, itemsByOrderId.<span style="color:#a6e22e">getOrDefault</span>(order.<span style="color:#a6e22e">getId</span>(), List.<span style="color:#a6e22e">of</span>())));
+</span></span></code></pre></div><p>핵심은 <strong>DB에서 한 번에 다 가져오고, 데이터를 나누는 작업(groupingBy)은 Java 메모리에서 처리</strong>한다는 점이다.</p>
+<table>
+  <thead>
+      <tr>
+          <th></th>
+          <th>개선 전</th>
+          <th>개선 후</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>20건 페이지</td>
+          <td>21번</td>
+          <td><strong>2번</strong></td>
+      </tr>
+      <tr>
+          <td>50건 페이지</td>
+          <td>51번</td>
+          <td><strong>2번</strong></td>
+      </tr>
+  </tbody>
+</table>
+<hr>
+<h3 id="1-2-reviewlistserviceimpl--리뷰-이미지-조회">1-2. ReviewListServiceImpl — 리뷰 이미지 조회<a hidden class="anchor" aria-hidden="true" href="#1-2-reviewlistserviceimpl--리뷰-이미지-조회">#</a></h3>
+<p>리뷰 목록을 조회하는 4개 메서드에서 같은 문제가 있었다.
+그런데 여기서는 이미 <code>ReviewListRepository</code>의 모든 쿼리에
+<code>@EntityGraph(attributePaths = &quot;images&quot;)</code>가 적용되어 있었다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// ReviewListRepository — 이미지가 이미 함께 로딩됨</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@EntityGraph</span>(attributePaths <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;images&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@Query</span>(<span style="color:#e6db74">&#34;SELECT rl FROM ReviewList rl ORDER BY rl.id DESC&#34;</span>)
+</span></span><span style="display:flex;"><span>Page<span style="color:#f92672">&lt;</span>ReviewList<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">findAllReviewListPage</span>(Pageable pageable);
+</span></span></code></pre></div><p>그런데 서비스에서 이미 로딩된 이미지를 또 조회하고 있었다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 개선 전 — 이미 로딩됐는데 또 DB 조회</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> reviewListPage.<span style="color:#a6e22e">map</span>(review <span style="color:#f92672">-&gt;</span> {
+</span></span><span style="display:flex;"><span>    List<span style="color:#f92672">&lt;</span>ReviewImage<span style="color:#f92672">&gt;</span> reviewImageList <span style="color:#f92672">=</span> reviewImageRepository.<span style="color:#a6e22e">findAllByReviewId</span>(review.<span style="color:#a6e22e">getId</span>());
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> ReviewListDTO(reviewImageList, review);
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 개선 후 — 메모리에서 바로 꺼냄</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> reviewListPage.<span style="color:#a6e22e">map</span>(review <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">new</span> ReviewListDTO(review.<span style="color:#a6e22e">getImages</span>(), review));
+</span></span></code></pre></div><hr>
+<h3 id="1-3-cartserviceimpl--장바구니-다중-조회">1-3. CartServiceImpl — 장바구니 다중 조회<a hidden class="anchor" aria-hidden="true" href="#1-3-cartserviceimpl--장바구니-다중-조회">#</a></h3>
+<p>선택된 상품 목록을 처리하는 4개 메서드에서 루프 내 단건 조회가 반복되고 있었다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 개선 전</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> (Long cartItemId : cartDTO.<span style="color:#a6e22e">getSelectId</span>()) {
+</span></span><span style="display:flex;"><span>    Cart cart <span style="color:#f92672">=</span> cartRepository.<span style="color:#a6e22e">findByMemberIdAndOptionId</span>(member.<span style="color:#a6e22e">getId</span>(), cartItemId); <span style="color:#75715e">// N번 반복</span>
+</span></span><span style="display:flex;"><span>    cartList.<span style="color:#a6e22e">add</span>(cart);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 개선 후</span>
+</span></span><span style="display:flex;"><span>List<span style="color:#f92672">&lt;</span>Long<span style="color:#f92672">&gt;</span> optionIds <span style="color:#f92672">=</span> Arrays.<span style="color:#a6e22e">asList</span>(cartDTO.<span style="color:#a6e22e">getSelectId</span>());
+</span></span><span style="display:flex;"><span>List<span style="color:#f92672">&lt;</span>Cart<span style="color:#f92672">&gt;</span> cartList <span style="color:#f92672">=</span> cartRepository.<span style="color:#a6e22e">findByMemberIdAndOptionIds</span>(member.<span style="color:#a6e22e">getId</span>(), optionIds); <span style="color:#75715e">// 1번</span>
+</span></span></code></pre></div><p><code>editCartListByMemberIdANDOptionId</code>는 기존에 <code>save()</code>도 루프에서 반복 호출하던 것을
+<code>saveAll()</code>로 묶었고, <code>multipleDeleteItemFromWishList</code>도 <code>deleteById()</code> 반복을
+<code>deleteAll()</code>로 묶었다.</p>
+<hr>
+<h2 id="유형-2-이미-있는-데이터를-또-조회">유형 2. 이미 있는 데이터를 또 조회<a hidden class="anchor" aria-hidden="true" href="#유형-2-이미-있는-데이터를-또-조회">#</a></h2>
+<h3 id="2-1-orderserviceimplcreateorder--member-이중-조회">2-1. OrderServiceImpl.createOrder() — Member 이중 조회<a hidden class="anchor" aria-hidden="true" href="#2-1-orderserviceimplcreateorder--member-이중-조회">#</a></h3>
+<p>메서드 안에서 동일한 <code>memberId</code>로 Member를 두 번 조회하고 있었다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 42번째 줄</span>
+</span></span><span style="display:flex;"><span>Member member <span style="color:#f92672">=</span> memberRepository.<span style="color:#a6e22e">findById</span>(orderDTO.<span style="color:#a6e22e">getMemberId</span>()).<span style="color:#a6e22e">orElseThrow</span>(...);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ... 약 100줄의 로직 ...</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 140번째 줄 — 완전히 동일한 쿼리</span>
+</span></span><span style="display:flex;"><span>Member memberMileage <span style="color:#f92672">=</span> memberRepository.<span style="color:#a6e22e">findById</span>(orderDTO.<span style="color:#a6e22e">getMemberId</span>()).<span style="color:#a6e22e">orElseThrow</span>(...);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (orderDTO.<span style="color:#a6e22e">getUsingMileage</span>() <span style="color:#f92672">&lt;=</span> memberMileage.<span style="color:#a6e22e">getStockMileage</span>()) { ... }
+</span></span></code></pre></div><p>42번째 줄의 <code>member</code> 객체가 메서드 끝까지 살아있는데 재사용하지 않고 있었다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 개선 후 — 기존 변수 재사용</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (orderDTO.<span style="color:#a6e22e">getUsingMileage</span>() <span style="color:#f92672">&lt;=</span> member.<span style="color:#a6e22e">getStockMileage</span>()) { ... }
+</span></span></code></pre></div><hr>
+<h3 id="2-2-memberserviceimplupdatemember--존재-확인-후-즉시-재조회">2-2. MemberServiceImpl.updateMember() — 존재 확인 후 즉시 재조회<a hidden class="anchor" aria-hidden="true" href="#2-2-memberserviceimplupdatemember--존재-확인-후-즉시-재조회">#</a></h3>
+<p>존재 여부를 <code>COUNT</code> 쿼리로 확인하고, 바로 다음 줄에서 같은 조건으로 <code>SELECT</code> 쿼리를 또 날리고 있었다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 개선 전 — 2번 조회</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>existsByEmail(memberDTO.<span style="color:#a6e22e">getEmail</span>())) {              <span style="color:#75715e">// SELECT COUNT(*) ...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> RuntimeException(<span style="color:#e6db74">&#34;회원을 찾을 수 없습니다.&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>Member searchMember <span style="color:#f92672">=</span> memberRepository.<span style="color:#a6e22e">findByEmail</span>(...); <span style="color:#75715e">// SELECT * ... (동일 조건)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 개선 후 — 1번 조회</span>
+</span></span><span style="display:flex;"><span>Member searchMember <span style="color:#f92672">=</span> memberRepository.<span style="color:#a6e22e">findByEmail</span>(...);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (searchMember <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> RuntimeException(<span style="color:#e6db74">&#34;회원을 찾을 수 없습니다.&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><hr>
+<h2 id="유형-3-필요-없는-엔티티-선조회">유형 3. 필요 없는 엔티티 선조회<a hidden class="anchor" aria-hidden="true" href="#유형-3-필요-없는-엔티티-선조회">#</a></h2>
+<h3 id="3-1-mileageserviceimpl--memberorder-선조회-6개-메서드">3-1. MileageServiceImpl — Member/Order 선조회 (6개 메서드)<a hidden class="anchor" aria-hidden="true" href="#3-1-mileageserviceimpl--memberorder-선조회-6개-메서드">#</a></h3>
+<p><code>memberId</code>를 파라미터로 받아서 마일리지를 조회하는 메서드인데,
+<code>member.getId()</code>를 쓰기 위해 Member 엔티티 전체를 먼저 불러오고 있었다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 개선 전</span>
+</span></span><span style="display:flex;"><span>Member member <span style="color:#f92672">=</span> memberRepository.<span style="color:#a6e22e">findById</span>(memberId).<span style="color:#a6e22e">orElseThrow</span>(...); <span style="color:#75715e">// 전체 필드 로딩</span>
+</span></span><span style="display:flex;"><span>List<span style="color:#f92672">&lt;</span>Mileage<span style="color:#f92672">&gt;</span> mileageList <span style="color:#f92672">=</span> mileageRepository.<span style="color:#a6e22e">findAllByMemberId</span>(member.<span style="color:#a6e22e">getId</span>()); <span style="color:#75715e">// 결국 memberId와 동일</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 개선 후</span>
+</span></span><span style="display:flex;"><span>List<span style="color:#f92672">&lt;</span>Mileage<span style="color:#f92672">&gt;</span> mileageList <span style="color:#f92672">=</span> mileageRepository.<span style="color:#a6e22e">findAllByMemberId</span>(memberId); <span style="color:#75715e">// 바로 사용</span>
+</span></span></code></pre></div><p><code>findAllByMemberEmail</code>의 경우 email → ID 변환이 필요했으므로,
+<code>MileageRepository</code>에 email로 직접 조회하는 쿼리를 추가하여 Member 조회를 완전히 없앴다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// MileageRepository에 추가</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@Query</span>(<span style="color:#e6db74">&#34;SELECT m FROM Mileage m WHERE m.member.email = :email ORDER BY m.id DESC&#34;</span>)
+</span></span><span style="display:flex;"><span>List<span style="color:#f92672">&lt;</span>Mileage<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">findAllByMemberEmail</span>(<span style="color:#a6e22e">@Param</span>(<span style="color:#e6db74">&#34;email&#34;</span>) String email);
+</span></span></code></pre></div><hr>
+<h2 id="유형-4-전체-조회-후-루프-탐색--버그-수정">유형 4. 전체 조회 후 루프 탐색 (+ 버그 수정)<a hidden class="anchor" aria-hidden="true" href="#유형-4-전체-조회-후-루프-탐색--버그-수정">#</a></h2>
+<p>이 유형은 단순히 비효율적인 것을 넘어 <strong>로직 버그</strong>까지 함께 존재했다.</p>
+<h3 id="4-1-reviewlistserviceimplcheckpurchasestatus--3가지-문제">4-1. ReviewListServiceImpl.checkPurchaseStatus() — 3가지 문제<a hidden class="anchor" aria-hidden="true" href="#4-1-reviewlistserviceimplcheckpurchasestatus--3가지-문제">#</a></h3>
+<p>리뷰 작성 전 구매 이력을 확인하는 메서드에서 3가지 문제가 동시에 발견됐다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 문제 1: N+1 체인 유발</span>
+</span></span><span style="display:flex;"><span>List<span style="color:#f92672">&lt;</span>OrderDTO<span style="color:#f92672">&gt;</span> orderDTO <span style="color:#f92672">=</span> orderService.<span style="color:#a6e22e">findAllByMemberId</span>(memberId);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 문제 2: 전체 주문을 가져와서 루프 탐색</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> listIndex <span style="color:#f92672">=</span> 0;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> (OrderDTO targetOrder : orderDTO) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 문제 3: listIndex가 항상 0 고정 → 각 주문의 첫 번째 상품만 확인</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 두 번째 상품 이후는 영원히 구매 확인 불가 → 구매했어도 리뷰 못 씀</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (targetOrder.<span style="color:#a6e22e">getOrderItemList</span>().<span style="color:#a6e22e">get</span>(listIndex).<span style="color:#a6e22e">getItemId</span>() <span style="color:#f92672">==</span> itemId) {
+</span></span><span style="display:flex;"><span>        checkStatus <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>listIndex</code>가 루프 안에서 증가하지 않으니 항상 0이다.
+예를 들어 첫 번째 주문에 상품 A, B가 있고 B를 구매했는데
+index 0인 A와만 비교하므로 구매 확인이 실패하는 버그다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 개선 후 — 단일 EXISTS 쿼리 1번</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> orderService.<span style="color:#a6e22e">existsPurchase</span>(memberId, itemId);
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// OrderItemRepository에 추가</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@Query</span>(<span style="color:#e6db74">&#34;SELECT COUNT(oi) &gt; 0 FROM OrderItem oi &#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#e6db74">&#34;WHERE oi.order.member.id = :memberId AND oi.item.id = :itemId AND oi.order.delFlag = false&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">existsByMemberIdAndItemId</span>(<span style="color:#a6e22e">@Param</span>(<span style="color:#e6db74">&#34;memberId&#34;</span>) Long memberId, <span style="color:#a6e22e">@Param</span>(<span style="color:#e6db74">&#34;itemId&#34;</span>) Long itemId);
+</span></span></code></pre></div><hr>
+<h3 id="4-2-qnalistserviceimplcheckwritingstatus--long-비교-버그">4-2. QnAListServiceImpl.checkWritingStatus() — Long 비교 버그<a hidden class="anchor" aria-hidden="true" href="#4-2-qnalistserviceimplcheckwritingstatus--long-비교-버그">#</a></h3>
+<p>작성자 권한 확인 메서드에서 회원의 전체 QnA 목록을 가져와 루프를 돌고 있었고,
+<code>Long</code> 타입을 <code>==</code> 연산자로 비교하는 버그가 있었다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 개선 전 — Long == 비교 버그</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> (QnAList targetQnAList : qnAList) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (targetQnAList.<span style="color:#a6e22e">getId</span>() <span style="color:#f92672">==</span> qnaListId) { <span style="color:#75715e">// ID가 128 이상이면 항상 false</span>
+</span></span><span style="display:flex;"><span>        checkStatus <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Java에서 <code>Long</code> 객체는 <strong>-128 ~ 127 범위만 캐싱</strong>된다.
+127을 넘는 ID값에서는 <code>==</code>로 비교하면 같은 값이어도 다른 객체 참조를 비교하게 되어 항상 <code>false</code>가 된다.
+즉, QnA 글 ID가 128 이상인 경우 <strong>작성자가 자신의 글을 수정/삭제할 수 없는 버그</strong>가 발생한다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 개선 후 — DB에서 직접 존재 여부 확인 (버그 자체가 없어짐)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> qnAListRepository.<span style="color:#a6e22e">existsByMemberIdAndQnaListId</span>(memberId, qnaListId);
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// QnAListRepository에 추가</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@Query</span>(<span style="color:#e6db74">&#34;SELECT COUNT(ql) &gt; 0 FROM QnAList ql WHERE ql.member.id = :memberId AND ql.id = :qnaListId&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">existsByMemberIdAndQnaListId</span>(<span style="color:#a6e22e">@Param</span>(<span style="color:#e6db74">&#34;memberId&#34;</span>) Long memberId, <span style="color:#a6e22e">@Param</span>(<span style="color:#e6db74">&#34;qnaListId&#34;</span>) Long qnaListId);
+</span></span></code></pre></div><hr>
+<h2 id="유형-5-연관-데이터-분리-조회">유형 5. 연관 데이터 분리 조회<a hidden class="anchor" aria-hidden="true" href="#유형-5-연관-데이터-분리-조회">#</a></h2>
+<h3 id="5-1-itemserviceimplgetone--4번-분리-조회">5-1. ItemServiceImpl.getOne() — 4번 분리 조회<a hidden class="anchor" aria-hidden="true" href="#5-1-itemserviceimplgetone--4번-분리-조회">#</a></h3>
+<p>상품 상세 1건 조회 시 기본 정보, 이미지, 옵션, 인포를 각각 별도 쿼리로 조회하고 있었다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 개선 전 — 4번 쿼리</span>
+</span></span><span style="display:flex;"><span>Item item <span style="color:#f92672">=</span> itemRepository.<span style="color:#a6e22e">findById</span>(id)...;                        <span style="color:#75715e">// 쿼리 1</span>
+</span></span><span style="display:flex;"><span>List<span style="color:#f92672">&lt;</span>ItemImage<span style="color:#f92672">&gt;</span> images <span style="color:#f92672">=</span> itemImageRepository.<span style="color:#a6e22e">findByItemId</span>(id);     <span style="color:#75715e">// 쿼리 2</span>
+</span></span><span style="display:flex;"><span>List<span style="color:#f92672">&lt;</span>ItemOption<span style="color:#f92672">&gt;</span> options <span style="color:#f92672">=</span> itemOptionRepository.<span style="color:#a6e22e">findByItemId</span>(id);  <span style="color:#75715e">// 쿼리 3</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> ItemDTO(item, images, options, item.<span style="color:#a6e22e">getInfo</span>());          <span style="color:#75715e">// 쿼리 4 (지연 로딩)</span>
+</span></span></code></pre></div><p>같은 파일의 <code>getAllItemsWithImageAndOptionsAndInfo()</code>는 이미 배치 조회로 올바르게 구현되어 있는데
+<code>getOne()</code>만 이 방식으로 남아 있었다.</p>
+<p><code>@EntityGraph</code>를 적용해 연관 데이터를 함께 로딩하도록 개선했다.
+단, <code>@OneToMany</code> List 컬렉션을 여러 개 동시에 JOIN하면 카테시안 곱 문제가 생길 수 있으므로
+Hibernate가 보조 SELECT로 처리하게 한다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// ItemRepository에 추가</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@EntityGraph</span>(attributePaths <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#34;images&#34;</span>, <span style="color:#e6db74">&#34;options&#34;</span>, <span style="color:#e6db74">&#34;info&#34;</span>})
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@Query</span>(<span style="color:#e6db74">&#34;SELECT i FROM Item i WHERE i.id = :id&#34;</span>)
+</span></span><span style="display:flex;"><span>Optional<span style="color:#f92672">&lt;</span>Item<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">findWithDetailsById</span>(<span style="color:#a6e22e">@Param</span>(<span style="color:#e6db74">&#34;id&#34;</span>) Long id);
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 개선 후</span>
+</span></span><span style="display:flex;"><span>Item item <span style="color:#f92672">=</span> itemRepository.<span style="color:#a6e22e">findWithDetailsById</span>(id)
+</span></span><span style="display:flex;"><span>        .<span style="color:#a6e22e">orElseThrow</span>(() <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">new</span> IllegalArgumentException(<span style="color:#e6db74">&#34;해당 상품이 존재하지 않습니다. ID: &#34;</span> <span style="color:#f92672">+</span> id));
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> ItemDTO(item, item.<span style="color:#a6e22e">getImages</span>(), item.<span style="color:#a6e22e">getOptions</span>(), item.<span style="color:#a6e22e">getInfo</span>());
+</span></span></code></pre></div><hr>
+<h2 id="정리">정리<a hidden class="anchor" aria-hidden="true" href="#정리">#</a></h2>
+<p>이번 리팩토링을 통해 느낀 점을 정리하면 다음과 같다.</p>
+<p><strong>1. N+1은 코드만 봐서는 잘 안 보인다</strong></p>
+<p>루프 안에서 Repository 메서드를 호출하는 코드는 얼핏 보면 자연스러워 보인다.
+실제로 실행되는 쿼리 수를 추적해봐야 문제가 드러난다.
+JPA를 사용할 때는 <code>spring.jpa.show-sql=true</code>나 쿼리 로그를 습관적으로 확인하는 것이 중요하다.</p>
+<p><strong>2. <code>@EntityGraph</code>가 있어도 서비스에서 또 조회하면 의미 없다</strong></p>
+<p>Repository에 <code>@EntityGraph</code>를 붙여뒀는데 서비스에서 별도 Repository를 또 호출하면
+최적화 효과가 전혀 없다. Repository와 Service 코드를 함께 보는 습관이 필요하다.</p>
+<p><strong>3. 비효율 옆에 버그가 같이 숨어있는 경우가 많다</strong></p>
+<p><code>checkPurchaseStatus()</code>의 <code>listIndex</code> 고정 버그,
+<code>checkWritingStatus()</code>의 <code>Long ==</code> 비교 버그처럼,
+성능 문제를 찾다 보면 로직 버그도 함께 발견되는 경우가 많았다.
+코드를 다시 읽는 것만으로도 버그를 잡을 수 있었다.</p>
+<p><strong>4. 해결 방법은 결국 &ldquo;DB 왕복 횟수를 줄이는 것&rdquo;</strong></p>
+<p>모든 유형의 개선이 결국 같은 방향을 가리키고 있었다.
+DB 쿼리는 네트워크 왕복 비용이 발생하기 때문에 횟수를 줄이는 것이 핵심이다.
+한 번에 가져와서 Java 메모리에서 처리하거나, EXISTS 쿼리로 최소한의 데이터만 조회하는 방식이 효과적이었다.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/gjLee-blog/tags/java/">Java</a></li>
+      <li><a href="http://localhost:1313/gjLee-blog/tags/spring-boot/">Spring Boot</a></li>
+      <li><a href="http://localhost:1313/gjLee-blog/tags/jpa/">JPA</a></li>
+      <li><a href="http://localhost:1313/gjLee-blog/tags/%EB%A6%AC%ED%8C%A9%ED%86%A0%EB%A7%81/">리팩토링</a></li>
+      <li><a href="http://localhost:1313/gjLee-blog/tags/n&#43;1/">N&#43;1</a></li>
+      <li><a href="http://localhost:1313/gjLee-blog/tags/%EC%84%B1%EB%8A%A5%EC%B5%9C%EC%A0%81%ED%99%94/">성능최적화</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="next" href="http://localhost:1313/gjLee-blog/posts/json-serialization/">
+    <span class="title">다음 페이지 »</span>
+    <br>
+    <span>[CS 공부]JSON이란? 직렬화와 역직렬화 개념 정리</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/gjLee-blog/">이경준의 기술 블로그</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

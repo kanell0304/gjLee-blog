@@ -132,6 +132,22 @@
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2 class="entry-hint-parent">[리팩토링] Spring Boot 쇼핑몰 서비스 레이어 DB 접근 최적화
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>개요 팀 프로젝트로 개발한 Spring Boot 기반 남성 의류 쇼핑몰의 백엔드를 리팩토링하면서 서비스 레이어에서 발견한 DB 접근 비효율 패턴 5가지와 개선 방법을 정리했다.
+프로젝트를 처음 개발할 당시 기능 구현에 집중하다 보니, 서비스 메서드 곳곳에서 불필요한 DB 쿼리가 반복 실행되는 패턴이 여러 곳에 남아 있었다. 이번 리팩토링에서는 코드를 다시 읽으면서 비효율적인 부분을 유형별로 분류하고 개선했다.
+문제 유형 분류 발견된 문제를 크게 5가지 유형으로 분류했다.
+유형 설명 해당 서비스 유형 1 N&#43;1 쿼리 Order, ReviewList, Cart 유형 2 이미 있는 데이터를 또 조회 Order, Member 유형 3 필요 없는 엔티티 선조회 Mileage 유형 4 전체 조회 후 루프 탐색 (&#43; 버그) ReviewList, QnAList 유형 5 연관 데이터 분리 조회 Item 유형 1. N&#43;1 쿼리 문제 N&#43;1 문제는 JPA를 사용할 때 가장 흔하게 발생하는 성능 안티패턴이다. 이름의 의미는 다음과 같다.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-04-12 00:00:00 +0000 UTC'>2026년 4월 12일</span>&nbsp;·&nbsp;<span>7 분</span></footer>
+  <a class="entry-link" aria-label="post link to [리팩토링] Spring Boot 쇼핑몰 서비스 레이어 DB 접근 최적화" href="http://localhost:1313/gjLee-blog/posts/spring-boot-refactoring-db-optimization/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2 class="entry-hint-parent">[CS 공부]JSON이란? 직렬화와 역직렬화 개념 정리
     </h2>
   </header>
@@ -141,7 +157,7 @@
 { &#34;name&#34;: &#34;이경준&#34;, &#34;age&#34;: 27, &#34;skills&#34;: { &#34;frontend&#34;: [&#34;React&#34;, &#34;Javascript&#34;], &#34;backend&#34;: [&#34;Python&#34;, &#34;Java&#34;] } } 위 예시에서 skills는 단순한 값이 아니라 frontend와 backend라는 키를 가진 또 다른 객체다. 이처럼 JSON은 재귀적으로 중첩이 가능하여 현실의 복잡한 데이터 구조를 표현하는 데 적합하다.
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2026-04-06 00:00:00 +0000 UTC'>April 6, 2026</span>&nbsp;·&nbsp;<span>2 분</span></footer>
+  <footer class="entry-footer"><span title='2026-04-06 00:00:00 +0000 UTC'>2026년 4월 6일</span>&nbsp;·&nbsp;<span>2 분</span></footer>
   <a class="entry-link" aria-label="post link to [CS 공부]JSON이란? 직렬화와 역직렬화 개념 정리" href="http://localhost:1313/gjLee-blog/posts/json-serialization/"></a>
 </article>
     </main>

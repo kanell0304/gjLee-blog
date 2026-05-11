@@ -6,8 +6,15 @@
     <description>Recent content in Categories on 이경준의 기술 블로그</description>
     <generator>Hugo</generator>
     <language>ko</language>
-    <lastBuildDate>Mon, 06 Apr 2026 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 12 Apr 2026 00:00:00 +0000</lastBuildDate>
     <atom:link href="http://localhost:1313/gjLee-blog/categories/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>리팩토링</title>
+      <link>http://localhost:1313/gjLee-blog/categories/%EB%A6%AC%ED%8C%A9%ED%86%A0%EB%A7%81/</link>
+      <pubDate>Sun, 12 Apr 2026 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/gjLee-blog/categories/%EB%A6%AC%ED%8C%A9%ED%86%A0%EB%A7%81/</guid>
+      <description></description>
+    </item>
     <item>
       <title>CS</title>
       <link>http://localhost:1313/gjLee-blog/categories/cs/</link>
